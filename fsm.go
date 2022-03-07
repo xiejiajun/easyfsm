@@ -26,8 +26,10 @@ func (f *FSM) Call(eventName EventName, opts ...ParamOption) (State, error) {
 	if !ok {
 		return f.getState(), UnKnownBusinessError{businessName: f.businessName}
 	}
+	// TODO 获取当前state转移到下一state的所有event处理器
 	events, ok := businessMap[f.getState()]
 	if !ok || events == nil {
+		// TODO 当前状态下没有任何状态转移Handler，报错
 		return f.getState(), UnKnownStateError{businessName: f.businessName, state: f.getState()}
 	}
 
@@ -36,17 +38,21 @@ func (f *FSM) Call(eventName EventName, opts ...ParamOption) (State, error) {
 		fn(opt)
 	}
 
+	// TODO 获取当前state下处理eventName对应的事件的状态转移Handler
 	eventEntity, ok := events[eventName]
 	if !ok || eventEntity == nil {
+		// TODO 当前状态下没有根据eventName对应的事件转移的下一状态的状态转移Handler, 报错
 		return f.getState(), UnKnownEventError{businessName: f.businessName, state: f.getState(), event: eventName}
 	}
 
 	// call eventName func
+	// TODO 调用状态转移Handler执行业务逻辑并将状态转移到下一状态
 	state, err := eventEntity.Execute(opt)
 	if err != nil {
 		return f.getState(), err
 	}
 	oldState := f.getState()
+	// TODO 更新状态
 	f.setState(state)
 	log.DefaultLogger.Log(log.LevelInfo, "eventName:", eventName,
 		"beforeState:", oldState, "afterState:", f.getState())
